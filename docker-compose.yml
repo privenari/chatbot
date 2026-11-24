@@ -58,6 +58,21 @@ services:
     depends_on:
       - n8n
 
+  api:
+    build: ./api
+    container_name: privenari_api
+    restart: always
+    # ports:
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - BUSINESS_DB=${BUSINESS_DB}
+    networks:
+      - chatbot_net
+    depends_on:
+      postgres:
+        condition: service_healthy
+
 networks:
   chatbot_net:
     external: true
