@@ -1,0 +1,13 @@
+cat << 'EOF' > .gitignore
+# Volúmenes persistentes de Docker (datos vivos y modelos pesados)
+postgres_data/
+ollama_data/
+n8n_data/
+
+# Variables de entorno y contraseñas
+.env
+
+# Archivos temporales de Python
+api/__pycache__/
+*.pyc
+EOF

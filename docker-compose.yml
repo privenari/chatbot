@@ -73,6 +73,16 @@ services:
       postgres:
         condition: service_healthy
 
+  ollama:
+    image: ollama/ollama:latest
+    container_name: privenari_ollama
+    restart: always
+    # ports:
+    volumes:
+      - ./ollama_data:/root/.ollama
+    networks:
+      - chatbot_net
+
 networks:
   chatbot_net:
     external: true
