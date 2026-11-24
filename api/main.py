@@ -69,6 +69,15 @@ def consultar_disponibilidad(inicio: datetime, fin: datetime, tipo: Optional[str
     return {"total_disponibles": len(disponibles), "espacios": disponibles}
 
 # 2. ENDPOINT: Crear una nueva reserva
+# Modelo de datos actualizado para recibir el código visual (ej. "A-03")
+class ReservaCreate(BaseModel):
+    codigo_espacio: str
+    patente_vehiculo: str
+    cliente_nombre: str
+    fecha_inicio: datetime
+    fecha_fin: datetime
+
+# 2. ENDPOINT: Crear una nueva reserva usando el código del espacio
 @app.post("/reservar")
 def crear_reserva(reserva: ReservaCreate):
     if reserva.fecha_inicio >= reserva.fecha_fin:
@@ -77,13 +86,24 @@ def crear_reserva(reserva: ReservaCreate):
     conn = get_db_connection()
     cur = conn.cursor()
 
-    # Verificar que el espacio existe y está libre en ese horario
+    # Buscar el ID numérico del espacio a partir de su código (ej. "A-03")
+    cur.execute("SELECT id FROM espacios WHERE codigo = %s AND activo = TRUE;", (reserva.codigo_espacio.upper(),))
+    espacio = cur.fetchone()
+    
+    if not espacio:
+        cur.close()
+        conn.close()
+        raise HTTPException(status_code=404, detail=f"El espacio '{reserva.codigo_espacio}' no existe o está inactivo.")
+        
+    espacio_id = espacio["id"]
+
+    # Verificar que el espacio esté libre en ese horario
     cur.execute("""
-        SELECT id FROM reservas
+        SELECT id FROM reservas 
         WHERE espacio_id = %s AND estado = 'confirmada'
         AND (fecha_inicio < %s AND fecha_fin > %s)
-    """, (reserva.espacio_id, reserva.fecha_fin, reserva.fecha_inicio))
-
+    """, (espacio_id, reserva.fecha_fin, reserva.fecha_inicio))
+    
     if cur.fetchone():
         cur.close()
         conn.close()
@@ -93,13 +113,13 @@ def crear_reserva(reserva: ReservaCreate):
     cur.execute("""
         INSERT INTO reservas (espacio_id, patente_vehiculo, cliente_nombre, fecha_inicio, fecha_fin)
         VALUES (%s, %s, %s, %s, %s) RETURNING id, estado;
-    """, (reserva.espacio_id, reserva.patente_vehiculo.upper(), reserva.cliente_nombre, reserva.fecha_inicio, reserva.fecha_fin))
-
+    """, (espacio_id, reserva.patente_vehiculo.upper(), reserva.cliente_nombre, reserva.fecha_inicio, reserva.fecha_fin))
+    
     nueva_reserva = cur.fetchone()
     conn.commit()
     cur.close()
     conn.close()
-
+    
     return {"mensaje": "Reserva confirmada", "reserva": nueva_reserva}
 
 # 3. ENDPOINT: Cancelar una reserva
