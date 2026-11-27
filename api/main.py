@@ -75,7 +75,7 @@ class ReservaCreate(BaseModel):
                 raise ValueError("Falta el horario específico (hora de inicio y hora de término).")
         return v
 
-# 1. ENDPOINT: Consultar disponibilidad en un rango de fechas
+# 1A. ENDPOINT: Consultar disponibilidad en un rango de fechas
 @app.get("/disponibilidad")
 def consultar_disponibilidad(inicio: datetime, fin: datetime, tipo: Optional[str] = None):
     if inicio >= fin:
@@ -107,6 +107,40 @@ def consultar_disponibilidad(inicio: datetime, fin: datetime, tipo: Optional[str
     cur.close()
     conn.close()
     return {"total_disponibles": len(disponibles), "espacios": disponibles}
+
+# 1B. ENDPOINT: Listar todos los espacios con su estado real en un bloque horario
+@app.get("/espacios")
+def listar_espacios_estado(inicio: datetime, fin: datetime):
+    if inicio >= fin:
+        raise HTTPException(status_code=400, detail="La fecha de inicio debe ser anterior a la de fin.")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute("""
+        SELECT 
+            e.id,
+            e.codigo,
+            e.zona,
+            e.tipo,
+            CASE 
+                WHEN EXISTS (
+                    SELECT 1 FROM reservas r
+                    WHERE r.espacio_id = e.id
+                      AND r.estado = 'confirmada'
+                      AND (r.fecha_inicio < %s AND r.fecha_fin > %s)
+                ) THEN FALSE
+                ELSE TRUE
+            END AS disponible
+        FROM espacios e
+        WHERE e.activo = TRUE
+        ORDER BY e.id ASC;
+    """, (fin, inicio))
+
+    espacios = cur.fetchall()
+    cur.close()
+    conn.close()
+    return {"espacios": espacios}
 
 # 2. ENDPOINT: Crear una nueva reserva
 # Modelo de datos actualizado para recibir el código visual (ej. "A-03")
