@@ -44,11 +44,14 @@ services:
         condition: service_healthy
 
   nginx:
-    build: ./nginx_config
+    build: 
+      context: .
+      dockerfile: nginx_config/Dockerfile
     container_name: privenari_nginx
     restart: always
     ports:
       - "80:80"
+      - "127.0.0.1:8080:8080"
     networks:
       - chatbot_net
     depends_on:
