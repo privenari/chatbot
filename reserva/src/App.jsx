@@ -2,14 +2,16 @@ import { useEffect, useRef, useState } from "react";
 import { Mail, Phone, MapPin, Check } from "lucide-react";
 import ParkingReservationModule from "./pages/ParkingReservationModule";
 import { useReveal, Words } from "./components/Reveal";
+import { Icon, IconSprite } from "./components/Icon";
 
 function Header() {
-  const bar = useRef(null);
+  const hdr = useRef(null);
   useEffect(() => {
     const onScroll = () => {
       const h = document.documentElement;
-      const p = h.scrollTop / Math.max(h.scrollHeight - h.clientHeight, 1);
-      if (bar.current) bar.current.style.transform = `scaleX(${p})`;
+      hdr.current?.style.setProperty("--sp", h.scrollTop / Math.max(h.scrollHeight - h.clientHeight, 1));
+      hdr.current?.classList.toggle("on", h.scrollTop > 8);
+      h.style.setProperty("--sy", h.scrollTop);
     };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
@@ -17,17 +19,28 @@ function Header() {
   }, []);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-40 bg-[rgba(251,250,246,.78)] backdrop-blur-xl border-b border-line">
-      <div className="wrap h-16 flex items-center justify-between">
-        <a href="#espacios" className="font-display font-semibold tracking-tight text-lg">
-          Privenari <span className="text-lapis">Park</span>
+    <header ref={hdr} className="hdr">
+      <div className="hdr-in">
+        <a href="#espacios" className="logo" aria-label="Privenari Park, inicio">
+          <span className="logo-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path fill="#fff" d="M2.5 16.5v-4c0-.9.5-1.6 1.3-1.9l2.6-1 1.7-3.1c.3-.5.8-.8 1.4-.8h5c.6 0 1.1.3 1.4.8l1.7 3.1 2.6 1c.8.3 1.3 1 1.3 1.9v4z" />
+              <path fill="#2a5c9a" d="M9.3 7.1h5.4l1.4 2.7H7.9z" />
+              <circle cx="7" cy="17" r="2.3" fill="#14335a" stroke="#fff" strokeWidth="1.4" />
+              <circle cx="17" cy="17" r="2.3" fill="#14335a" stroke="#fff" strokeWidth="1.4" />
+            </svg>
+          </span>
+          <span className="logo-text">Privenari Park</span>
         </a>
-        <nav className="flex items-center gap-6 text-sm font-medium text-mute">
-          <a href="#espacios" className="hover:text-ink transition">Espacios</a>
-          <a href="#contacto" className="btn btn-ink !py-2 !px-4 !text-sm">Contacto</a>
+        <nav className="nav-d" aria-label="Principal">
+          <a href="#espacios" className="lnk">Espacios</a>
+          <a href="#contacto" className="lnk">Contacto</a>
         </nav>
+        <button type="button" className="btn btn-lapis btn-sm hdr-cta"
+          onClick={() => window.dispatchEvent(new Event("open-chat"))}>
+          Reservar plaza <Icon name="arrow" size={18} />
+        </button>
       </div>
-      <div ref={bar} className="h-[2px] bg-lapis origin-left scale-x-0" />
     </header>
   );
 }
@@ -42,17 +55,17 @@ function Contact() {
   return (
     <section id="contacto" className="sec">
       <div className="wrap">
-        <div className="grad-sage rounded-[36px] p-[clamp(28px,5vw,64px)] grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center">
+        <div className="lapis-hero on-dark relative overflow-hidden text-white rounded-[36px] p-[clamp(28px,5vw,64px)] grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center">
           <div>
-            <span className="kicker rv">Contacto</span>
-            <h2 className="rvw mt-4">
+            <span className="kicker rv !text-[#BFD8C6]">Contacto</span>
+            <h2 className="rvw mt-4 !text-white">
               <Words text="¿Necesitas un plan mensual?" />
               <br />
-              <Words className="text-lapis" start={4} text="Te respondemos el mismo día." />
+              <Words className="mel" start={4} text="Te respondemos el mismo día." />
             </h2>
             <ul className="mt-8 grid gap-3">
               {items.map(({ icon: I, label, value }, i) => (
-                <li key={label} className="rv glass !rounded-2xl flex items-center gap-3 px-4 py-3" style={{ "--d": `${i * 90}ms` }}>
+                <li key={label} className="rv glass text-ink !rounded-2xl flex items-center gap-3 px-4 py-3" style={{ "--d": `${i * 90}ms` }}>
                   <span className="w-9 h-9 rounded-full bg-white grid place-items-center text-lapis"><I className="w-4 h-4" /></span>
                   <span className="text-sm"><span className="block text-mute">{label}</span><span className="font-semibold">{value}</span></span>
                 </li>
@@ -62,7 +75,7 @@ function Contact() {
 
           <form
             onSubmit={(e) => { e.preventDefault(); setSent(true); }}
-            className="card rv p-6 sm:p-8 grid gap-4"
+            className="card rv text-ink p-6 sm:p-8 grid gap-4"
           >
             {sent ? (
               <div className="py-10 text-center">
@@ -76,7 +89,7 @@ function Contact() {
                 <label className="grid gap-1.5 text-sm font-medium">Nombre<input required className="field" /></label>
                 <label className="grid gap-1.5 text-sm font-medium">Correo<input required type="email" className="field" /></label>
                 <label className="grid gap-1.5 text-sm font-medium">Mensaje<textarea required rows={4} className="field resize-none" /></label>
-                <button className="btn btn-ink justify-center">Enviar mensaje</button>
+                <button className="btn btn-primary justify-center">Enviar mensaje</button>
               </>
             )}
           </form>
@@ -90,14 +103,15 @@ export default function App() {
   useReveal();
   return (
     <>
+      <IconSprite />
       <Header />
-      <main className="pt-16">
+      <main>
         <ParkingReservationModule />
         <Contact />
       </main>
-      <footer className="border-t border-line py-10 text-sm text-mute">
+      <footer className="bg-[#0F2540] text-white/70 py-10 text-sm">
         <div className="wrap flex flex-wrap items-center justify-between gap-3">
-          <span className="font-display font-semibold text-ink">Privenari Park</span>
+          <span className="font-display font-semibold text-white">Privenari Park</span>
           <span>© {new Date().getFullYear()} Privenari Park. Todos los derechos reservados.</span>
         </div>
       </footer>

@@ -13,6 +13,8 @@ const makeMsg = (role, text) => ({ id: crypto.randomUUID(), role, text, time: no
 
 export default function ParkingChatPanel({ externalDraft, onClearDraft, onBookingStateChanged }) {
   const [open, setOpen] = useState(false); // minimizado al inicio
+  const [closing, setClosing] = useState(false);
+  const close = () => { setClosing(true); setTimeout(() => { setOpen(false); setClosing(false); }, 160); };
   const [sessionId, setSessionId] = useState(() => getOrCreateSessionId());
   const [messages, setMessages] = useState([
     makeMsg("assistant", "Hola, soy el asistente de reservas. Puedo consultar disponibilidad, reservar una plaza o cancelar una reserva. ¿En qué te ayudo?"),
@@ -72,7 +74,7 @@ export default function ParkingChatPanel({ externalDraft, onClearDraft, onBookin
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Abrir asistente de reservas"
-        className="ring-fab fixed z-50 right-5 bottom-5 sm:right-8 sm:bottom-8 w-14 h-14 rounded-full bg-ink text-white grid place-items-center shadow-soft hover:bg-lapis transition"
+        className="ring-fab chat-pop press fixed z-50 right-5 bottom-5 sm:right-8 sm:bottom-8 w-14 h-14 rounded-full bg-ink text-white grid place-items-center shadow-soft hover:bg-lapis transition"
       >
         <MessageCircle className="w-6 h-6" />
       </button>
@@ -83,10 +85,10 @@ export default function ParkingChatPanel({ externalDraft, onClearDraft, onBookin
     <div
       role="dialog"
       aria-label="Asistente de reservas"
-      className="chat-pop fixed z-50 right-3 bottom-3 sm:right-8 sm:bottom-8 w-[calc(100vw-1.5rem)] sm:w-[400px] h-[min(620px,calc(100vh-1.5rem))] bg-white border border-line rounded-[30px] shadow-soft flex flex-col overflow-hidden"
+      className={`${closing ? "chat-out" : "chat-pop"} fixed z-50 right-3 bottom-3 sm:right-8 sm:bottom-8 w-[calc(100vw-1.5rem)] sm:w-[400px] h-[min(620px,calc(100vh-1.5rem))] bg-white border border-line rounded-[30px] shadow-soft flex flex-col overflow-hidden`}
     >
       {/* Cabecera */}
-      <div className="px-5 py-4 bg-ink text-white flex items-center justify-between">
+      <div className="lapis-hero px-5 py-4 text-white flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-lapis grid place-items-center"><Bot className="w-5 h-5" /></div>
           <div>
@@ -99,7 +101,7 @@ export default function ParkingChatPanel({ externalDraft, onClearDraft, onBookin
         <div className="flex items-center gap-1">
           <button onClick={handleResetChat} title="Nueva conversación" aria-label="Nueva conversación"
             className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition"><RotateCcw className="w-4 h-4" /></button>
-          <button onClick={() => setOpen(false)} title="Minimizar" aria-label="Minimizar asistente"
+          <button onClick={close} title="Minimizar" aria-label="Minimizar asistente"
             className="p-2 rounded-full text-white/70 hover:text-white hover:bg-white/10 transition"><Minus className="w-4 h-4" /></button>
         </div>
       </div>

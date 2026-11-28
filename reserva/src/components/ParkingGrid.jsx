@@ -6,6 +6,12 @@ const TYPE_CONFIG = {
   discapacitados: { label: "Acceso preferencial", icon: Accessibility, badge: "bg-blue-50 text-lapis border-blue-200" },
 };
 
+const glow = (e) => {
+  const r = e.currentTarget.getBoundingClientRect();
+  e.currentTarget.style.setProperty("--mx", `${e.clientX - r.left}px`);
+  e.currentTarget.style.setProperty("--my", `${e.clientY - r.top}px`);
+};
+
 export default function ParkingGrid({
   spaces, loading, selectedDate, startTime, endTime,
   onDateChange, onStartTimeChange, onEndTimeChange, onRefresh, onSelectSpotForChat,
@@ -18,11 +24,11 @@ export default function ParkingGrid({
 
   return (
     <div className="card rv overflow-hidden">
-      <div className="p-6 sm:p-8 border-b border-line bg-cream/60">
+      <div className="lapis-hero p-6 sm:p-8 text-white">
         <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
           <div>
-            <h2 className="!text-[clamp(28px,3vw,40px)]">Plazas disponibles</h2>
-            <p className="text-mute mt-2 max-w-[56ch]">
+            <h2 className="!text-[clamp(28px,3vw,40px)] !text-white">Plazas disponibles</h2>
+            <p className="text-white/75 mt-2 max-w-[56ch]">
               Cambia el horario para actualizar la ocupación. Haz clic en una plaza libre para pedirla al asistente.
             </p>
           </div>
@@ -44,16 +50,16 @@ export default function ParkingGrid({
             <input type="date" value={selectedDate} onChange={(e) => onDateChange(e.target.value)} className="field" />
           </label>
           <label className="text-sm font-medium">
-            <span className="mb-1.5 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-mute" /> Hora de inicio</span>
+            <span className="mb-1.5 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-white/60" /> Hora de inicio</span>
             <input type="time" value={startTime} onChange={(e) => onStartTimeChange(e.target.value)} className="field" />
           </label>
           <label className="text-sm font-medium">
-            <span className="mb-1.5 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-mute" /> Hora de término</span>
+            <span className="mb-1.5 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-white/60" /> Hora de término</span>
             <input type="time" value={endTime} onChange={(e) => onEndTimeChange(e.target.value)} className="field" />
           </label>
         </div>
         {startTime >= endTime && (
-          <p className="text-sm text-rose-700 mt-3">La hora de término debe ser posterior a la de inicio.</p>
+          <p className="text-sm text-rose-200 mt-3">La hora de término debe ser posterior a la de inicio.</p>
         )}
       </div>
 
@@ -66,16 +72,18 @@ export default function ParkingGrid({
             <div className="flex items-center gap-2 mb-4">
               <MapPin className="w-4 h-4 text-lapis" />
               <h3>{zona}</h3>
+              <span className="num ml-1 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-lapis/10 text-lapis" data-num>{zoneSpaces.filter((s) => s.disponible).length} libres</span>
             </div>
-            <div className="grid gap-3.5 sm:grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-[repeat(3,minmax(0,1fr))]">
-              {zoneSpaces.map((spot) => {
+            <div className="grid gap-3.5 sm:grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-[repeat(3,minmax(0,1fr))] xl:grid-cols-[repeat(4,minmax(0,1fr))]">
+              {zoneSpaces.map((spot, idx) => {
                 const t = TYPE_CONFIG[spot.tipo] || TYPE_CONFIG.estandar;
                 const Icon = t.icon;
                 return (
                   <button key={spot.id} type="button" disabled={!spot.disponible} onClick={() => onSelectSpotForChat(spot)}
-                    className={`text-left p-4 rounded-2xl border flex flex-col gap-3 transition-all duration-300 ${
+                    onPointerMove={glow} style={{ "--k": Math.min(idx, 12) }}
+                    className={`spot-card text-left p-4 rounded-2xl border flex flex-col gap-3 ${
                       spot.disponible
-                        ? "border-line bg-white hover:border-lapis hover:-translate-y-0.5 hover:shadow-soft cursor-pointer"
+                        ? "border-line bg-white cursor-pointer"
                         : "border-line bg-cream/70 opacity-60 cursor-not-allowed"
                     }`}>
                     <div className="flex items-center justify-between">
