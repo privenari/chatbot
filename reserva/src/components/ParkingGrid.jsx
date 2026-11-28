@@ -1,163 +1,95 @@
 import { Car, Zap, Accessibility, MapPin, RefreshCw, Clock } from "lucide-react";
 
 const TYPE_CONFIG = {
-  estandar: {
-    label: "Estándar",
-    icon: Car,
-    badge: "bg-slate-100 text-slate-700 border-slate-200",
-  },
-  electrico: {
-    label: "Carga Eléctrica",
-    icon: Zap,
-    badge: "bg-amber-50 text-amber-700 border-amber-200",
-  },
-  discapacitados: {
-    label: "Acceso Preferencial",
-    icon: Accessibility,
-    badge: "bg-blue-50 text-blue-700 border-blue-200",
-  },
+  estandar: { label: "Estándar", icon: Car, badge: "bg-cream text-ink border-line" },
+  electrico: { label: "Carga eléctrica", icon: Zap, badge: "bg-amber-50 text-amber-800 border-amber-200" },
+  discapacitados: { label: "Acceso preferencial", icon: Accessibility, badge: "bg-blue-50 text-lapis border-blue-200" },
 };
 
 export default function ParkingGrid({
-  spaces,
-  loading,
-  selectedDate,
-  startTime,
-  endTime,
-  onDateChange,
-  onStartTimeChange,
-  onEndTimeChange,
-  onRefresh,
-  onSelectSpotForChat,
+  spaces, loading, selectedDate, startTime, endTime,
+  onDateChange, onStartTimeChange, onEndTimeChange, onRefresh, onSelectSpotForChat,
 }) {
   const availableCount = spaces.filter((s) => s.disponible).length;
-
-  // Agrupar espacios por zona (Nivel 1 - Techado / Exterior - Parquímetro)
-  const groupedByZone = spaces.reduce((acc, spot) => {
-    acc[spot.zona] = acc[spot.zona] || [];
-    acc[spot.zona].push(spot);
+  const groupedByZone = spaces.reduce((acc, s) => {
+    (acc[s.zona] ||= []).push(s);
     return acc;
   }, {});
 
   return (
-    <div className="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col h-full">
-      {/* Barra de filtros horarios */}
-      <div className="p-5 border-b border-slate-200 bg-slate-50/70 rounded-t-xl">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+    <div className="card rv overflow-hidden">
+      <div className="p-6 sm:p-8 border-b border-line bg-cream/60">
+        <div className="flex flex-wrap items-end justify-between gap-4 mb-6">
           <div>
-            <h2 className="text-base font-semibold text-slate-900">
-              Disponibilidad de Plazas en Tiempo Real
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Selecciona un bloque horario o haz clic en una plaza libre para solicitarla al asistente.
+            <h2 className="!text-[clamp(28px,3vw,40px)]">Plazas disponibles</h2>
+            <p className="text-mute mt-2 max-w-[56ch]">
+              Cambia el horario para actualizar la ocupación. Haz clic en una plaza libre para pedirla al asistente.
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-              {availableCount} de {spaces.length} disponibles
+            <span className="num inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-sm font-semibold bg-white border border-line" data-num>
+              <i className="pulse-dot w-2 h-2 rounded-full bg-sage inline-block" />
+              {availableCount} de {spaces.length} libres
             </span>
-            <button
-              onClick={onRefresh}
-              disabled={loading}
-              title="Actualizar disponibilidad"
-              className="p-2 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 transition disabled:opacity-50"
-            >
+            <button onClick={onRefresh} disabled={loading} title="Actualizar disponibilidad" aria-label="Actualizar disponibilidad"
+              className="w-10 h-10 grid place-items-center rounded-full border border-line bg-white hover:bg-cream transition disabled:opacity-50">
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Fecha</label>
-            <input
-              type="date"
-              value={selectedDate}
-              onChange={(e) => onDateChange(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 focus:border-blue-600 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-slate-400" /> Hora Inicio
-            </label>
-            <input
-              type="time"
-              value={startTime}
-              onChange={(e) => onStartTimeChange(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 focus:border-blue-600 focus:outline-none"
-            />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1 flex items-center gap-1">
-              <Clock className="w-3.5 h-3.5 text-slate-400" /> Hora Término
-            </label>
-            <input
-              type="time"
-              value={endTime}
-              onChange={(e) => onEndTimeChange(e.target.value)}
-              className="w-full rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-800 focus:border-blue-600 focus:outline-none"
-            />
-          </div>
+        <div className="grid gap-3 sm:grid-cols-[repeat(3,minmax(0,1fr))]">
+          <label className="text-sm font-medium">
+            <span className="block mb-1.5">Fecha</span>
+            <input type="date" value={selectedDate} onChange={(e) => onDateChange(e.target.value)} className="field" />
+          </label>
+          <label className="text-sm font-medium">
+            <span className="mb-1.5 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-mute" /> Hora de inicio</span>
+            <input type="time" value={startTime} onChange={(e) => onStartTimeChange(e.target.value)} className="field" />
+          </label>
+          <label className="text-sm font-medium">
+            <span className="mb-1.5 flex items-center gap-1.5"><Clock className="w-3.5 h-3.5 text-mute" /> Hora de término</span>
+            <input type="time" value={endTime} onChange={(e) => onEndTimeChange(e.target.value)} className="field" />
+          </label>
         </div>
+        {startTime >= endTime && (
+          <p className="text-sm text-rose-700 mt-3">La hora de término debe ser posterior a la de inicio.</p>
+        )}
       </div>
 
-      {/* Grilla de cajones por zona */}
-      <div className="p-5 space-y-6 overflow-y-auto flex-1">
+      <div className="p-6 sm:p-8 grid gap-10">
+        {spaces.length === 0 && (
+          <p className="text-mute text-center py-10">{loading ? "Consultando disponibilidad…" : "No hay plazas para mostrar. Ajusta el horario."}</p>
+        )}
         {Object.entries(groupedByZone).map(([zona, zoneSpaces]) => (
           <div key={zona}>
-            <div className="flex items-center gap-2 mb-3">
-              <MapPin className="w-4 h-4 text-blue-600" />
-              <h3 className="text-sm font-semibold text-slate-800 uppercase tracking-wide">
-                {zona}
-              </h3>
+            <div className="flex items-center gap-2 mb-4">
+              <MapPin className="w-4 h-4 text-lapis" />
+              <h3>{zona}</h3>
             </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5">
+            <div className="grid gap-3.5 sm:grid-cols-[repeat(2,minmax(0,1fr))] lg:grid-cols-[repeat(3,minmax(0,1fr))]">
               {zoneSpaces.map((spot) => {
-                const typeInfo = TYPE_CONFIG[spot.tipo] || TYPE_CONFIG.estandar;
-                const IconComponent = typeInfo.icon;
-
+                const t = TYPE_CONFIG[spot.tipo] || TYPE_CONFIG.estandar;
+                const Icon = t.icon;
                 return (
-                  <button
-                    key={spot.id}
-                    type="button"
-                    disabled={!spot.disponible}
-                    onClick={() => onSelectSpotForChat(spot)}
-                    className={`text-left p-4 rounded-xl border-2 transition-all flex flex-col justify-between ${
+                  <button key={spot.id} type="button" disabled={!spot.disponible} onClick={() => onSelectSpotForChat(spot)}
+                    className={`text-left p-4 rounded-2xl border flex flex-col gap-3 transition-all duration-300 ${
                       spot.disponible
-                        ? "border-emerald-200 bg-emerald-50/30 hover:border-blue-500 hover:bg-blue-50/30 cursor-pointer"
-                        : "border-rose-200 bg-rose-50/40 opacity-75 cursor-not-allowed"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-lg font-bold tracking-tight text-slate-900 font-mono">
-                        {spot.codigo}
-                      </span>
-                      <span
-                        className={`px-2 py-0.5 rounded-md text-xs font-semibold ${
-                          spot.disponible
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-rose-100 text-rose-800"
-                        }`}
-                      >
-                        {spot.disponible ? "LIBRE" : "OCUPADO"}
+                        ? "border-line bg-white hover:border-lapis hover:-translate-y-0.5 hover:shadow-soft cursor-pointer"
+                        : "border-line bg-cream/70 opacity-60 cursor-not-allowed"
+                    }`}>
+                    <div className="flex items-center justify-between">
+                      <span className="font-display text-xl font-semibold tracking-tight">{spot.codigo}</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${spot.disponible ? "bg-emerald-50 text-sage" : "bg-rose-50 text-rose-700"}`}>
+                        {spot.disponible ? "Libre" : "Ocupada"}
                       </span>
                     </div>
-
-                    <div className="flex items-center justify-between pt-2 border-t border-slate-200/70">
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-medium border ${typeInfo.badge}`}
-                      >
-                        <IconComponent className="w-3.5 h-3.5" />
-                        {typeInfo.label}
-                      </span>
-                      {spot.disponible && (
-                        <span className="text-xs font-medium text-blue-600">
-                          Reservar →
-                        </span>
-                      )}
-                    </div>
+                    <span className={`inline-flex self-start items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border whitespace-nowrap ${t.badge}`}>
+                      <Icon className="w-3.5 h-3.5 shrink-0" /> {t.label}
+                    </span>
+                    <span className={`mt-auto pt-3 border-t border-line text-xs font-semibold ${spot.disponible ? "text-lapis" : "text-mute"}`}>
+                      {spot.disponible ? "Reservar esta plaza" : "No disponible en este horario"}
+                    </span>
                   </button>
                 );
               })}
